@@ -55,6 +55,22 @@ char * HexBase64(char *data,char *dest){
 	return dest;
 }
 
+// HEX CONVERTORS
+
+int ToHex(char *data,char *dest){
+	for (int i = 0; i < strlen(data); ++i) {
+		sprintf(dest+(sizeof(char)*i*2),"%x",data[i]);
+	}
+	return 0;
+}
+
+int FromHex(char *data,char *dest){
+	for (int i = 0; i < (strlen(data) / 2); i++) {
+   		sscanf(data + 2*i, "%02x",(unsigned int *)(&dest[i]));
+	}
+	return 0;
+}
+
 // CHOICE MAKERS
 
 int activator(int ch,char **arguments){
@@ -66,6 +82,23 @@ int activator(int ch,char **arguments){
 		printf("%s\n",output);
 		free(output);
 		return 0;
+	} else if(ch == 2){
+		char *output = malloc(sizeof(char)*strlen(arguments[2])*2);
+		ToHex(arguments[2],output);
+		printf("%s\n",output);
+		free(output);
+	} else if(ch == 3){
+		char *output = malloc(sizeof(char)*strlen(arguments[2]));
+		FromHex(arguments[2],output);
+		printf("%s\n",output);
+		free(output);
+	} else if(ch == 31){
+		char *output = malloc(sizeof(char)*strlen(arguments[2])*2);
+		char *output2 = malloc(sizeof(char)*strlen(arguments[2])*2);
+		FromHex(arguments[2],output);
+		HexBase64(output,output2);
+		printf("%s\n",output2);
+		free(output);free(output2);
 	}
 	return 0;
 }
