@@ -71,6 +71,54 @@ int FromHex(char *data,char *dest){
 	return 0;
 }
 
+// FILE FUNCTIONS
+
+long SizeFile(char *filename){
+	FILE *fp;
+	fp = fopen(filename,"rb");
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	fclose(fp);
+	return size;
+}
+
+int ReadFile(char *filename,char *dest){
+	FILE *fp;
+	fp = fopen(filename,"rb");
+	fread(dest,sizeof(char),SizeFile(filename),fp);
+	fclose(fp);
+	return 0;
+}
+
+// XOR BRUTEFORCE
+
+int BruteForceXOR(char *data){
+	int broken = 0;
+	char *output = malloc(sizeof(char) * strlen(data));
+	for(unsigned int i = 0;i < 256;i++){
+		printf("WE ARE HERE %d \n",i);
+		for(int j = 0;j < strlen(data);j++){
+			if((((data[j] ^ i) > 127) || ((data[j] ^ i) < 32)) && (data[j] != '\n')){
+				broken = 1;
+				break;
+			} else {
+				if(data[j] == '\n'){
+					output[j] = data[j];
+				} else {
+					output[j] = data[j] ^ i;
+				}
+			}
+		}
+		if(broken != 1){
+			printf("%s %x\n",output,i);
+		} else {
+			broken = 0;
+		}
+	}
+	free(output);
+	return 0;
+}
+
 // CHOICE MAKERS
 
 int activator(int ch,char **arguments){
@@ -99,13 +147,42 @@ int activator(int ch,char **arguments){
 		HexBase64(output,output2);
 		printf("%s\n",output2);
 		free(output);free(output2);
+	} else if(ch == 4){
+		char *key = malloc(sizeof(char)*strlen(arguments[2])*2);
+		char *buffer = malloc(sizeof(char)*strlen(arguments[3])*2);
+		FromHex(arguments[3],buffer);
+		FromHex(arguments[2],key);
+		for(int i = 0;i < strlen(arguments[3])/2;i++){
+			printf("%x",(buffer[i] ^ key[i % strlen(key)]));
+		}
+		printf("\n");
+		free(key);free(buffer);
+	} else if(ch == 5){
+		char *output = malloc(sizeof(char)*SizeFile(arguments[2]));
+		ReadFile(arguments[2],output);
+		printf("%s",output);
+		printf("\n");
+		free(output);
+	} else if(ch == 37){
+		char *output = malloc(sizeof(char)*strlen(arguments[2]));
+		FromHex(arguments[2],output);
+		BruteForceXOR(output);
+		free(output);
+	} else if(ch == 57){
+		char *output = malloc(sizeof(char)*SizeFile(arguments[2]));
+		char *output1 = malloc(sizeof(char)*SizeFile(arguments[2]));
+		ReadFile(arguments[2],output);
+		FromHex(output,output1);
+		BruteForceXOR(output1);
+		free(output);
+		free(output1);
 	}
 	return 0;
 }
 
 int main(int argc,char **argv){
 	if (argc == 1 || activator(atoi(argv[1]),argv)){
-		puts("[*] Non Meaningful Output, Please Retry With Valid Input");
+		puts("USAGE : ./program [CODE] [ARGUMENTS...]\nCodes:\n0.Base64 Decode\n1.Base64 Encode\n2.To Hex\n3.From Hex\n4.Fixed XOR\n5.Input From A File\n6.Write To A File\n7.Bruteforce Single XOR\n\nYou can pipe output from one to another by using sequencing like 31 takes hex string and gives the base64 encoded string for it.");
 	}
 	return 0;
 }
